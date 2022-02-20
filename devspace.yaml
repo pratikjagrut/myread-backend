@@ -1,0 +1,65 @@
+version: v1beta11
+vars:
+  - name: IMAGE
+    value: pratikjagrut/myreads
+  - name: DB_SERVICE
+    value: myreads-service
+images:
+  default:
+    image: ${IMAGE}
+deployments:
+- name: myreads
+  helm:
+    componentChart: true
+    values:
+      containers:
+      - env:
+        - name: MARIADB_ROOT_PASSWORD
+          value: mypassword
+        - name: MARIADB_DATABASE
+          value: myreads
+        - name: MARIADB_USER
+          value: pratik
+        - name: MARIADB_PASSWORD
+          value: pratik
+        image: mariadb:latest
+        volumeMounts:
+        - containerPath: /var/lib/myreads
+          volume:
+            name: myreads-data
+            subPath: /myreads
+      service:
+        name: ${DB_SERVICE}
+        ports:
+        - port: 3306
+      volumes:
+      - name: myreads-data
+        size: 5Gi
+- name: myreads-backend
+  helm:
+    componentChart: true
+    values:
+      containers:
+      - image: ${IMAGE}
+        env:
+        - name: DB_HOST
+          value: ${DB_SERVICE}
+        - name: DB_PORT
+          value: "3306"
+        - name: DB_NAME
+          value: myreads
+        - name: DB_USER
+          value: pratik
+        - name: DB_PASS
+          value: pratik
+      service:
+        ports:
+        - port: 80
+dev:
+  ports:
+  - imageSelector: ${IMAGE}
+    forward:
+    - port: 8080
+      remotePort: 80
+  # sync:
+  # - imageName: ${IMAGE}
