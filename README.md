@@ -1,1 +1,1 @@
-# myread-backend
+# myreads-backend
