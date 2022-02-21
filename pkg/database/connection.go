@@ -24,14 +24,15 @@ func ConnectDb() {
 	db_pass := os.Getenv("DB_PASS")
 	db_name := os.Getenv("DB_NAME")
 
-	dsn := fmt.Sprintf("%s:%s@tcp(%s:%s)/%s", db_user, db_pass, db_host, db_port, db_name)
-	db, err := gorm.Open(mysql.Open(dsn), &gorm.Config{})
+	dsn := fmt.Sprintf("%s:%s@tcp(%s:%s)/%s?charset=utf8mb4&parseTime=True&loc=Local", db_user, db_pass, db_host, db_port, db_name)
+	db, err := gorm.Open(mysql.Open(dsn), &gorm.Config{
+		Logger: logger.Default.LogMode(logger.Info),
+	})
 	if err != nil {
 		log.Fatal("Failed to connect to the database! |n", err)
 	}
 
 	log.Println("Connected to the database successfully")
-	db.Logger = logger.Default.LogMode(logger.Info)
 	log.Println("Running Migrations!")
 
 	// Add migrations
