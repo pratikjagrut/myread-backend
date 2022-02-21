@@ -1,0 +1,9 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: mariadb-configmap
+data:
+  MARIADB_ROOT_PASSWORD: mypassword
+  MARIADB_DATABASE: myreads
+  MARIADB_USER: pratik
+  MARIADB_PASSWORD: pratik

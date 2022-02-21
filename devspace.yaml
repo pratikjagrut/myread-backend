@@ -1,41 +1,59 @@
 version: v1beta11
 vars:
+  - name: APP
+    value: myreads
   - name: IMAGE
     value: pratikjagrut/myreads
-  - name: DB_SERVICE
-    value: myreads-service
+  - name: DB
+    value: mariadb
 images:
   default:
     image: ${IMAGE}
 deployments:
-- name: myreads
+- name: configurations
+  kubectl:
+    manifests:
+    - manifests/
+- name: ${DB}
   helm:
     componentChart: true
     values:
       containers:
       - env:
         - name: MARIADB_ROOT_PASSWORD
-          value: mypassword
+          valueFrom:
+            configMapKeyRef:
+              name: ${DB}-configmap
+              key: MARIADB_ROOT_PASSWORD
         - name: MARIADB_DATABASE
-          value: myreads
+          valueFrom:
+            configMapKeyRef:
+              name: ${DB}-configmap
+              key: MARIADB_DATABASE
         - name: MARIADB_USER
-          value: pratik
+          valueFrom:
+            configMapKeyRef:
+              name: ${DB}-configmap
+              key: MARIADB_USER 
         - name: MARIADB_PASSWORD
-          value: pratik
+          valueFrom:
+            configMapKeyRef:
+              name: ${DB}-configmap
+              key: MARIADB_PASSWORD 
         image: mariadb:latest
         volumeMounts:
-        - containerPath: /var/lib/myreads
+        - containerPath: /var/lib/${APP}
           volume:
-            name: myreads-data
-            subPath: /myreads
+            name: ${APP}-data
+            subPath: /${APP}
       service:
-        name: ${DB_SERVICE}
+        name: ${DB}-service
         ports:
         - port: 3306
       volumes:
-      - name: myreads-data
+      - name: ${APP}-data
         size: 5Gi
-- name: myreads-backend
+- name: ${APP}-backend
   helm:
     componentChart: true
     values:
@@ -43,15 +61,21 @@ deployments:
       - image: ${IMAGE}
         env:
         - name: DB_HOST
-          value: ${DB_SERVICE}
+          value: ${DB}-service
         - name: DB_PORT
           value: "3306"
         - name: DB_NAME
-          value: myreads
+          value: ${APP}
         - name: DB_USER
-          value: pratik
+          valueFrom:
+            configMapKeyRef:
+              name: ${DB}-configmap
+              key: MARIADB_USER 
         - name: DB_PASS
-          value: pratik
+          valueFrom:
+            configMapKeyRef:
+              name: ${DB}-configmap
+              key: MARIADB_PASSWORD
       service:
         ports:
         - port: 80

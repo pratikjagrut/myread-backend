@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"os"
 
 	"github.com/pratikjagrut/myreads-backend/pkg/config"
@@ -18,4 +19,5 @@ func main() {
 		panic(err)
 	}
 	_ = db
+	fmt.Println("connection done!")
 }
