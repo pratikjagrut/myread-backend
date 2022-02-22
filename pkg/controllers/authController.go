@@ -12,6 +12,7 @@ import (
 	"github.com/gofiber/fiber/v2"
 	"github.com/pratikjagrut/myreads-backend/pkg/database"
 	"github.com/pratikjagrut/myreads-backend/pkg/models"
+	"golang.org/x/crypto/bcrypt"
 	"gorm.io/gorm"
 )
 
@@ -40,7 +41,7 @@ func CreateUser(c *fiber.Ctx) error {
 		})
 	}
 
-	if err := models.SaveUser(database.Database.Db, &user); err != nil {
+	if err := user.SaveUser(database.Database.Db); err != nil {
 		var mysqlErr *mysql.MySQLError
 		m := ""
 		if errors.As(err, &mysqlErr) && mysqlErr.Number == 1062 {
@@ -62,6 +63,18 @@ func CreateUser(c *fiber.Ctx) error {
 		"message": "User registration successful",
 		"status":  fiber.StatusOK,
 	})
+}
+
+type ResponseUser struct {
+	Name  string
+	Email string
+}
+
+func getResponseUser(user *models.User) *ResponseUser {
+	return &ResponseUser{
+		Name:  user.Name,
+		Email: user.Email,
+	}
 }
 
 func Login(c *fiber.Ctx) error {
@@ -104,7 +117,7 @@ func Login(c *fiber.Ctx) error {
 		})
 	}
 
-	if err := models.VerifyPassword(foundUser.Password, user.Password); err != nil {
+	if err := bcrypt.CompareHashAndPassword([]byte(foundUser.Password), []byte(user.Password)); err != nil {
 		log.Println("Login: ", err)
 		c.Status(fiber.StatusUnauthorized)
 		return c.JSON(fiber.Map{
@@ -137,11 +150,10 @@ func Login(c *fiber.Ctx) error {
 	}
 
 	c.Cookie(cookie)
-	foundUser.Password = ""
 	return c.JSON(fiber.Map{
 		"message": "Login Success",
 		"status":  fiber.StatusOK,
-		"user":    foundUser,
+		"user":    getResponseUser(foundUser),
 	})
 }
 
@@ -169,7 +181,7 @@ func getIssuer(c *fiber.Ctx) (string, error) {
 
 }
 
-func User(c *fiber.Ctx) error {
+func GetUser(c *fiber.Ctx) error {
 	issuer, err := getIssuer(c)
 	if err != nil {
 		log.Println("User: getIssuer", err)
@@ -195,11 +207,11 @@ func User(c *fiber.Ctx) error {
 			"status":  fiber.StatusNotFound,
 		})
 	}
-	foundUser.Password = ""
+
 	return c.JSON(fiber.Map{
 		"message": "Fetch user successful",
 		"status":  fiber.StatusOK,
-		"user":    foundUser,
+		"user":    getResponseUser(foundUser),
 	})
 }
 
