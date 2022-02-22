@@ -18,28 +18,28 @@ type User struct {
 	Books    []Book
 }
 
-func (u *User) SaveUser(db *gorm.DB) error {
-	b, err := hash(u.Password)
+func SaveUser(db *gorm.DB, u *User) error {
+	b, err := hashedPassword(u.Password)
 	if err != nil {
 		return err
 	}
 
 	u.Password = string(b)
-	u.Sanitize()
+	sanitize(u)
 	return db.Create(&u).Error
 }
 
-func (u *User) FindUserByEmail(db *gorm.DB) (user *User, err error) {
-	err = db.Where("email = ?", u.Email).First(&user).Error
+func FindUserByEmail(db *gorm.DB, email string) (user *User, err error) {
+	err = db.Where("email = ?", email).First(&user).Error
 	return user, err
 }
 
-func (u *User) Sanitize() {
+func sanitize(u *User) {
 	u.Name = html.EscapeString(strings.TrimSpace(u.Name))
 	u.Email = html.EscapeString(strings.TrimSpace(u.Email))
 }
 
-func (u *User) Validate(action string) error {
+func Validate(action string, u *User) error {
 	switch strings.ToLower(action) {
 	case "login":
 		if u.Password == "" {
@@ -72,7 +72,7 @@ func (u *User) Validate(action string) error {
 	}
 }
 
-func hash(password string) ([]byte, error) {
+func hashedPassword(password string) ([]byte, error) {
 	return bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
 }
 

@@ -30,7 +30,7 @@ func CreateUser(c *fiber.Ctx) error {
 		})
 	}
 
-	if err := user.Validate("create"); err != nil {
+	if err := models.Validate("create", &user); err != nil {
 		e := fmt.Sprintf("CreateUser: %s", err)
 		database.Database.Db.Logger.Error(context.Background(), e)
 		c.Status(fiber.StatusBadRequest)
@@ -40,7 +40,7 @@ func CreateUser(c *fiber.Ctx) error {
 		})
 	}
 
-	if err := user.SaveUser(database.Database.Db); err != nil {
+	if err := models.SaveUser(database.Database.Db, &user); err != nil {
 		var mysqlErr *mysql.MySQLError
 		m := ""
 		if errors.As(err, &mysqlErr) && mysqlErr.Number == 1062 {
@@ -77,7 +77,7 @@ func Login(c *fiber.Ctx) error {
 		})
 	}
 
-	if err := user.Validate("login"); err != nil {
+	if err := models.Validate("login", &user); err != nil {
 		e := fmt.Sprintf("Login: %s", err)
 		database.Database.Db.Logger.Error(context.Background(), e)
 		c.Status(fiber.StatusBadRequest)
@@ -87,7 +87,7 @@ func Login(c *fiber.Ctx) error {
 		})
 	}
 
-	foundUser, err := user.FindUserByEmail(database.Database.Db)
+	foundUser, err := models.FindUserByEmail(database.Database.Db, user.Email)
 	if err != nil {
 		m := ""
 		if errors.Is(err, gorm.ErrRecordNotFound) {
@@ -178,10 +178,8 @@ func User(c *fiber.Ctx) error {
 			"message": "Unauthorized",
 		})
 	}
-	user := &models.User{
-		Email: issuer,
-	}
-	foundUser, err := user.FindUserByEmail(database.Database.Db)
+
+	foundUser, err := models.FindUserByEmail(database.Database.Db, issuer)
 	if err != nil {
 		m := ""
 		if errors.Is(err, gorm.ErrRecordNotFound) {
