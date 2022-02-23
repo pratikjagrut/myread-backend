@@ -36,7 +36,7 @@ func CreateUser(c *fiber.Ctx) error {
 		database.Database.Db.Logger.Error(context.Background(), e)
 		c.Status(fiber.StatusBadRequest)
 		return c.JSON(fiber.Map{
-			"message": err.Error(),
+			"message": "Bad Request",
 			"status":  fiber.StatusBadRequest,
 		})
 	}
@@ -95,7 +95,7 @@ func Login(c *fiber.Ctx) error {
 		database.Database.Db.Logger.Error(context.Background(), e)
 		c.Status(fiber.StatusBadRequest)
 		return c.JSON(fiber.Map{
-			"message": err.Error(),
+			"message": "Bad Request",
 			"status":  fiber.StatusBadRequest,
 		})
 	}
@@ -160,7 +160,6 @@ func Login(c *fiber.Ctx) error {
 func getIssuer(c *fiber.Ctx) (string, error) {
 	cookie := c.Cookies("jwt")
 	if cookie == "" {
-		log.Println("getIssuer: empty cookie")
 		c.Status(fiber.StatusUnauthorized)
 		return "", fmt.Errorf("getIssuer: empty cookie")
 	}
@@ -170,7 +169,6 @@ func getIssuer(c *fiber.Ctx) (string, error) {
 	})
 
 	if err != nil {
-		log.Println("getIssuer: ", err)
 		c.Status(fiber.StatusInternalServerError)
 		return "", fmt.Errorf("getIssuer: %v", err)
 	}
@@ -184,7 +182,8 @@ func getIssuer(c *fiber.Ctx) (string, error) {
 func GetUser(c *fiber.Ctx) error {
 	issuer, err := getIssuer(c)
 	if err != nil {
-		log.Println("User: getIssuer", err)
+		e := fmt.Sprintf("GetUser: %s", err)
+		database.Database.Db.Logger.Error(context.Background(), e)
 		c.Status(fiber.StatusUnauthorized)
 		return c.JSON(fiber.Map{
 			"message": "Unauthorized",
@@ -199,7 +198,7 @@ func GetUser(c *fiber.Ctx) error {
 		} else {
 			m = "something went wrong"
 		}
-		e := fmt.Sprintf("Login: %s", err)
+		e := fmt.Sprintf("GetUser: %s", err)
 		database.Database.Db.Logger.Error(context.Background(), e)
 		c.Status(fiber.StatusNotFound)
 		return c.JSON(fiber.Map{

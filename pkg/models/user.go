@@ -12,10 +12,10 @@ import (
 
 type User struct {
 	gorm.Model
-	Name     string `json:"name"`
-	Email    string `gorm:"primaryKey;not null;unique" json:"email"`
-	Password string `gorm:"not null" json:"password"`
-	Books    []Book
+	Name     string `gorm:"type:varchar(191);not null" json:"name"`
+	Email    string `gorm:"type:varchar(191);primaryKey;not null;unique" json:"email"`
+	Password string `gorm:"type:varchar(191);not null" json:"password"`
+	Books    []Book `gorm:"foreignKey:UserEmail;references:Email"`
 }
 
 func (u *User) SaveUser(db *gorm.DB) error {
@@ -75,7 +75,3 @@ func Validate(action string, u *User) error {
 		return errors.New("Wrong operation")
 	}
 }
-
-// func VerifyPassword(hashedPassword, password string) error {
-// 	return
-// }
