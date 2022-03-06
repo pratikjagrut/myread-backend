@@ -28,7 +28,7 @@ FROM gcr.io/distroless/base-debian10 as production
 COPY --from=build /app/main /
 
 # Application port (optional)
-EXPOSE 3000
+EXPOSE 8000
 
 # Container start command for production
 CMD ["/main"]
